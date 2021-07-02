@@ -106,3 +106,18 @@ ntp: false
 ntp_server: 0.rhel.pool.ntp.org
 model: dell
 patch_rhcos_image: false
+acm: false
+acm_pullsecret: openshift_pull_acm.json
+acm_snapshot: 2.3.0-DOWNSTREAM-2021-06-29-05-03-27
+acm_op_bundle: v2.3.0-143
+acm_nodes: []
+acm_virtual_nodes: False
+acm_virtual_nodes_number: 1
+acm_virtual_nodes_numcpus: 8
+acm_virtual_nodes_memory: 38912
+acm_virtual_nodes_baremetal_mac_prefix: aa:aa:aa:cc:cc
+acm_spoke_name: mgmt-spoke1
+acm_spoke_api_ip:
+acm_spoke_ingress_ip:
+acm_spoke_masters_number: 1
+acm_spoke_workers_number: 0

@@ -16,6 +16,9 @@ bash /root/03_network.sh
 {% if disconnected_operators %}
 /root/065_olm.sh
 {% endif %}
+{% if acm %}
+bash /root/066_mirror_acm.sh
+{% endif %}
 {% endif %}
 
 {% if nbde %}
@@ -36,5 +39,8 @@ bash /root/10_nfs.sh
 {% endif %}
 {% if imageregistry %}
 oc patch configs.imageregistry.operator.openshift.io cluster --type merge -p '{"spec":{"managementState":"Managed","storage":{"pvc":{}}}}'
+{% endif %}
+{% if acm %}
+bash /root/23_acm.sh
 {% endif %}
 {% endif %}
