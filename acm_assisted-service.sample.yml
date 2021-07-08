@@ -1,0 +1,157 @@
+apiVersion: hive.openshift.io/v1
+kind: ClusterImageSet
+metadata:
+  name: openshift-v4.8.0
+  namespace: open-cluster-management
+spec:
+  releaseImage: ${RELEASE_IMAGE}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: assisted-service-config
+  namespace: open-cluster-management
+  labels:
+    app: assisted-service
+data:
+  LOG_LEVEL: "debug"
+---
+apiVersion: agent-install.openshift.io/v1beta1
+kind: AgentServiceConfig
+metadata:
+  namespace: open-cluster-management
+  name: agent
+  annotations:
+    unsupported.agent-install.openshift.io/assisted-service-configmap: 'assisted-service-config'
+spec:
+  databaseStorage:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 40Gi
+  filesystemStorage:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 40Gi
+  mirrorRegistryRef:
+    name: "lab-index-mirror"
+  osImages:
+    - openshiftVersion: "4.8"
+      version: ""
+      url: "http://${BAREMETAL_IP}/rhcos-live.x86_64.iso"
+      rootFSUrl: "http://${BAREMETAL_IP}/rhcos-live-rootfs.x86_64.img"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  creationTimestamp: null
+  name: assisted-deployment-ssh-private-key
+  namespace: open-cluster-management
+type: Opaque
+stringData:
+  ssh-privatekey: |
+${SSH_PRIV_KEY}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: assisted-deployment-pull-secret
+  namespace: open-cluster-management
+stringData:
+  .dockerconfigjson: '${PULLSECRET}'
+  type: kubernetes.io/dockerconfigjson
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lab-index-mirror
+  namespace: open-cluster-management
+  labels:
+    app: assisted-service
+data:
+  ca-bundle.crt: |
+${CA_CERT}
+  registries.conf: |
+    unqualified-search-registries = ["registry.access.redhat.com", "docker.io"]
+
+    [[registry]]
+      prefix = ""
+      location = "quay.io/acm-d"
+      mirror-by-digest-only = false
+
+      [[registry.mirror]]
+        location = "${LOCAL_REGISTRY}/rhacm2"
+
+    [[registry]]
+      prefix = ""
+      location = "quay.io/openshift-release-dev/ocp-v4.0-art-dev"
+      mirror-by-digest-only = false
+
+      [[registry.mirror]]
+        location = "${LOCAL_REGISTRY}/ocp4"
+
+    [[registry]]
+      prefix = ""
+      location = "quay.io:443/acm-d"
+      mirror-by-digest-only = false
+
+      [[registry.mirror]]
+        location = "${LOCAL_REGISTRY}/rhacm2"
+
+    [[registry]]
+      prefix = ""
+      location = "registry.ci.openshift.org/ocp/release"
+      mirror-by-digest-only = false
+
+      [[registry.mirror]]
+        location = "${LOCAL_REGISTRY}/ocp4"
+
+    [[registry]]
+      prefix = ""
+      location = "registry.redhat.io/ocp4"
+      mirror-by-digest-only = false
+
+      [[registry.mirror]]
+        location = "${LOCAL_REGISTRY}/ocp4"
+
+    [[registry]]
+      prefix = ""
+      location = "registry.redhat.io/openshift4"
+      mirror-by-digest-only = false
+
+      [[registry.mirror]]
+        location = "${LOCAL_REGISTRY}/openshift4"
+
+    [[registry]]
+      prefix = ""
+      location = "registry.redhat.io/rhacm2"
+      mirror-by-digest-only = false
+
+      [[registry.mirror]]
+        location = "${LOCAL_REGISTRY}/rhacm2"
+
+    [[registry]]
+      prefix = ""
+      location = "registry.redhat.io/rhacm2/managedcluster-import-controller-rhel8"
+      mirror-by-digest-only = false
+
+      [[registry.mirror]]
+        location = "${LOCAL_REGISTRY}/rhacm2/managedcluster-import-controller-rhel8"
+
+    [[registry]]
+      prefix = ""
+      location = "registry.redhat.io/rhel8"
+      mirror-by-digest-only = false
+
+      [[registry.mirror]]
+        location = "${LOCAL_REGISTRY}/rhel8"
+    [[registry]]
+      prefix = ""
+      location = "registry.ci.openshift.org/ocp4/release"
+      mirror-by-digest-only = false
+
+      [[registry.mirror]]
+        location = "${LOCAL_REGISTRY}/ocp4"

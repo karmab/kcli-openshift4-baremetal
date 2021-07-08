@@ -45,6 +45,7 @@ podman start registry
 export OPENSHIFT_RELEASE_IMAGE={{ openshift_image }}
 export OCP_RELEASE=$( echo $OPENSHIFT_RELEASE_IMAGE | cut -d: -f2)
 {% elif version == 'nightly' %}
+{% set tag = tag|string %}
 TAG={{ tag if tag.split('.')|length > 2 else "latest-" + tag }}
 export OPENSHIFT_RELEASE_IMAGE=$(curl -s https://mirror.openshift.com/pub/openshift-v4/clients/ocp-dev-preview/$TAG/release.txt | grep 'Pull From: quay.io' | awk -F ' ' '{print $3}')
 export OCP_RELEASE=$( echo $OPENSHIFT_RELEASE_IMAGE | cut -d: -f2)
@@ -87,6 +88,10 @@ else
   sed -i 's/^-----BEGIN/ -----BEGIN/' /root/install-config.yaml
 fi
 echo $REGISTRY_NAME:5000/ocp4/release:$OCP_RELEASE > /root/version.txt
+echo $OPENSHIFT_RELEASE_IMAGE > /root/.openshift_release_image
+echo $OCP_RELEASE > /root/.ocp_release
 
 PULLSECRET=$(cat /root/openshift_pull.json | tr -d [:space:])
 echo -e "pullSecret: |\n  $PULLSECRET" >> /root/install-config.yaml
+
+cp /root/99-operatorhub.yaml /root/manifests

@@ -1,0 +1,55 @@
+{% if acm_virtual_nodes %}
+{% set extra_nodes = [] %}
+{% for num in range(0, acm_virtual_nodes_number) %}
+{% do extra_nodes.append({}) %}
+{% endfor %}
+{% set acm_nodes = extra_nodes + acm_nodes %}
+{% endif %}
+
+{% for node in acm_nodes %}
+{% set num = loop.index0 %}
+apiVersion: v1
+data:
+  password: {{ ipmi_password|string|base64 }}
+  username: {{ ipmi_user|string|base64 }}
+kind: Secret
+metadata:
+  name: {{ cluster }}-acm-bmc-secret-{{ num }}
+  namespace: {{ acm_spoke_name }}
+type: Opaque
+---
+apiVersion: metal3.io/v1alpha1
+kind: BareMetalHost
+metadata:
+  name: {{ cluster }}-acm-node-{{ num }}
+  namespace: {{ acm_spoke_name }}
+  labels:
+    infraenvs.agent-install.openshift.io: {{ acm_spoke_name }}
+  annotations:
+    inspect.metal3.io: disabled
+    bmac.agent-install.openshift.io/hostname: {{ cluster }}-acm-node-{{ num }}
+spec:
+  bmc:
+    {% if 'redfish_address' in node %}
+    disableCertificateVerification: True
+    {% if 'redfish' in node['redfish_address'] or 'idrac' in node['redfish_address'] %}
+    address: {{ node['redfish_address'] }}
+    {% elif node['model']|default(model) == 'hpe' %}
+    address: redfish-virtualmedia://{{ node['redfish_address'] }}/redfish/v1/Systems/1
+    {% else %}
+    address: idrac-virtualmedia://{{ node['redfish_address'] }}/redfish/v1/Systems/System.Embedded.1
+    {% endif %}
+    {% else %}
+    address: redfish-virtualmedia+http://IP:8000/redfish/v1/Systems/UUID-{{ num }}
+    {% endif %}
+    credentialsName: {{ cluster }}-acm-bmc-secret-{{ num }}
+{% if 'provisioning_mac' in node %}
+  bootMACAddress: {{ node['provisioning_mac'] }}
+{% else %}
+  bootMACAddress: {{ acm_virtual_nodes_baremetal_mac_prefix + ":" + "%02.d" | format(num + 1)| string }}
+{% endif %}
+  hardwareProfile: unknown
+  online: true
+  automatedCleaningMode: disabled
+---
+{% endfor %}

@@ -1,0 +1,150 @@
+{% if acm_spoke_api_ip != None and ':' in acm_spoke_api_ip %}
+{% set ipv6 = True %}
+{% elif ':' in baremetal_cidr %}
+{% set ipv6 = True %}
+{% else %}
+{% set ipv6 = False %}
+{% endif %}
+{% set cluster_network_ipv6 = {"cidr": "fd01::/48", "hostPrefix": 64} %}
+{% set cluster_network_ipv4 = {"cidr": "10.132.0.0/14", "hostPrefix": 23} %}
+{% set service_network_ipv6 = ["fd02::/112"] %}
+{% set service_network_ipv4 = ["172.30.0.0/16"] %}
+{% set machine_cidr_ipv4 = ["10.0.0.0/16"] %}
+{% set machine_cidr_ipv6 = ["fc00::/48"] %}
+{% if dualstack|default(False) %}
+{% set machine_cidrs = machine_cidr_ipv4 + machine_cidr_ipv6 %}
+{% set cluster_networks = [cluster_network_ipv4] + [cluster_network_ipv6] %}
+{% set service_networks = service_network_ipv4 + service_network_ipv6 %}
+{% if ipv6 %}
+{% set machine_cidrs = machine_cidrs|reverse %}
+{% set cluster_networks = cluster_networks|reverse %}
+{% set service_networks = service_networks|reverse %}
+{% endif %}
+{% elif ipv6 %}
+{% set machine_cidrs = machine_cidr_ipv6 %}
+{% set cluster_networks = [cluster_network_ipv6] %}
+{% set service_networks = service_network_ipv6 %}
+{% else %}
+{% set machine_cidrs = machine_cidr_ipv4 %}
+{% set cluster_networks = [cluster_network_ipv4] %}
+{% set service_networks = service_network_ipv4 %}
+{% endif %}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ${SPOKE_NAME}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: assisted-deployment-pull-secret
+  namespace: ${SPOKE_NAME}
+stringData:
+  .dockerconfigjson: '${PULLSECRET}'
+  type: kubernetes.io/dockerconfigjson
+---
+apiVersion: extensions.hive.openshift.io/v1beta1
+kind: AgentClusterInstall
+metadata:
+  name: ${SPOKE_NAME}
+  namespace: ${SPOKE_NAME}
+spec:
+{% if acm_spoke_masters_number > 1 and acm_spoke_api_ip != None and acm_spoke_ingress_ip != None %}
+  apiVIP: {{ acm_spoke_api_ip }}
+  ingressVIP: {{ acm_spoke_ingress_ip }}
+{% endif %}
+  clusterDeploymentRef:
+    name: ${SPOKE_NAME}
+  imageSetRef:
+    name: openshift-v4.8.0
+  networking:
+    machineNetwork:
+    - cidr: {{ baremetal_cidr }}
+  {% if dualstack and dualstack_cidr != None %}
+    - cidr: {{ dualstack_cidr }}
+  {% endif %}
+    clusterNetwork:
+  {% for network in cluster_networks %}
+    - cidr: {{ network['cidr'] }}
+      hostPrefix: {{ network['hostPrefix'] }}
+  {% endfor %}
+    serviceNetwork:
+  {% for network in service_networks %}
+    - {{ network }}
+  {% endfor %}
+  provisionRequirements:
+    controlPlaneAgents: ${MASTERS_NUMBER}
+    workerAgents: ${WORKERS_NUMBER}
+  sshPublicKey: "${SSH_PUB_KEY}"
+---
+apiVersion: hive.openshift.io/v1
+kind: ClusterDeployment
+metadata:
+  name: ${SPOKE_NAME}
+  namespace: ${SPOKE_NAME}
+spec:
+  baseDomain: ${DOMAIN}
+  clusterName: ${SPOKE_NAME}
+  controlPlaneConfig:
+    servingCertificates: {}
+  installed: false
+  clusterInstallRef:
+    group: extensions.hive.openshift.io
+    kind: AgentClusterInstall
+    name: ${SPOKE_NAME}
+    version: v1beta1
+  platform:
+    agentBareMetal:
+      agentSelector:
+        matchLabels:
+          cluster-name: "${SPOKE_NAME}"
+  pullSecretRef:
+    name: assisted-deployment-pull-secret
+---
+apiVersion: agent.open-cluster-management.io/v1
+kind: KlusterletAddonConfig
+metadata:
+  name: ${SPOKE_NAME}
+  namespace: ${SPOKE_NAME}
+spec:
+  clusterName: ${SPOKE_NAME}
+  clusterNamespace: ${SPOKE_NAME}
+  clusterLabels:
+    cloud: auto-detect
+    vendor: auto-detect
+  workManager:
+    enabled: true
+  applicationManager:
+    enabled: false
+  certPolicyController:
+    enabled: false
+  iamPolicyController:
+    enabled: false
+  policyController:
+    enabled: false
+  searchCollector:
+    enabled: false
+---
+apiVersion: cluster.open-cluster-management.io/v1
+kind: ManagedCluster
+metadata:
+  name: ${SPOKE_NAME}
+  namespace: ${SPOKE_NAME}
+spec:
+  hubAcceptsClient: true
+---
+apiVersion: agent-install.openshift.io/v1beta1
+kind: InfraEnv
+metadata:
+  name: ${SPOKE_NAME}
+  namespace: ${SPOKE_NAME}
+spec:
+  clusterRef:
+    name: ${SPOKE_NAME}
+    namespace: ${SPOKE_NAME}
+  sshAuthorizedKey: "${SSH_PUB_KEY}"
+  agentLabelSelector:
+    matchLabels:
+      cluster-name: "${SPOKE_NAME}"
+  pullSecretRef:
+    name: assisted-deployment-pull-secret

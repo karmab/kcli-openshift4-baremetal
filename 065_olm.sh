@@ -44,4 +44,3 @@ oc adm catalog mirror $LOCAL_REGISTRY/$LOCAL_REGISTRY_INDEX_TAG $LOCAL_REGISTRY/
 
 cp /root/manifests-redhat-operator-index-*/imageContentSourcePolicy.yaml /root/manifests
 cp /root/manifests-redhat-operator-index-*/catalogSource.yaml /root/manifests
-cp /root/99-operatorhub.yaml /root/manifests
