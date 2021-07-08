@@ -6,6 +6,7 @@ set -euo pipefail
 dnf clean all
 sleep 30
 {% endif %}
+echo "fastestmirror=1" >> /etc/dnf/dnf.conf
 dnf -y install pkgconf-pkg-config libvirt-devel gcc python3-libvirt python3 ipmitool python3-devel
 pip3 install virtualbmc
 /usr/local/bin/vbmcd
