@@ -48,6 +48,7 @@ apps-{{ spoke_name }}:
 
 {{ cluster }}-{{ spoke_name }}-node-{{ num }}:
  pool: {{ pool }}
+ redfish_iso: {{ spoke_name }}.iso
  image:
  numcpus: {{ ztp_virtual_nodes_numcpus }}
  start: false

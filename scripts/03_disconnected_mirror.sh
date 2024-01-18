@@ -3,9 +3,9 @@
 set -euo pipefail
 
 PRIMARY_NIC=$(ls -1 /sys/class/net | grep 'eth\|en' | head -1)
+export IP=$(ip -o addr show $PRIMARY_NIC | head -1 | awk '{print $4}' | cut -d'/' -f1)
 export PATH=/root/bin:$PATH
 export PULL_SECRET="/root/openshift_pull.json"
-export IP=$(ip -o addr show $PRIMARY_NIC | head -1 | awk '{print $4}' | cut -d'/' -f1)
 {% if disconnected_url != None %}
 {% set registry_port = disconnected_url.split(':')[-1] %}
 {% set registry_name = disconnected_url|replace(":" + registry_port, '') %}
@@ -74,7 +74,10 @@ fi
 
 cp /root/machineconfigs/99-operatorhub.yaml /root/manifests
 
-{% for image in disconnected_extra_images %}
+{% for image in disconnected_extra_images + ['quay.io/edge-infrastructure/assisted-installer-agent:latest', 'quay.io/edge-infrastructure/assisted-installer:latest', 'quay.io/edge-infrastructure/assisted-installer-controller:latest'] %}
 echo "Syncing image {{ image }}"
 /root/bin/sync_image.sh {{ image }}
 {% endfor %}
+
+oc adm release extract --registry-config /root/openshift_pull.json --command=openshift-install --to . $REGISTRY_NAME:$REGISTRY_PORT/openshift/release-images:$OCP_RELEASE --insecure
+mv -f openshift-install /bin
