@@ -30,7 +30,6 @@ baremetal_macs:
 localhost_fix: true
 lab_dhcp: false
 installer_ip: 192.168.130.250
-baremetal_bootstrap_ip: 192.168.130.251
 notify: true
 nfs: true
 vmrules:

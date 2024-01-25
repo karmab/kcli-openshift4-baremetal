@@ -1,7 +1,6 @@
 info: |
     This deploys a vm where
-    - openshift-install is downloaded
-    - caches rhcos bootstrap image
+    - aicli is downloaded
     - stop the nodes to deploy through redfish
     - launch the install against a set of baremetal nodes (and optionally virtual ctlplanes)
     It can be used with a centos8stream or rhel8 vm (which required to set rhn credentials in your kcli config)
@@ -39,12 +38,6 @@ image_url:
 numcpus: 16   
 rhnregister: true
 rhnwait: 30
-baremetal_noprovisioning_ip:
-baremetal_noprovisioning_bootstrap_ip:
-baremetal_bootstrap_mac:
-baremetal_bootstrap_ip:
-baremetal_bootstrap_os_image:
-baremetal_cluster_os_image:
 bmc_user: root
 bmc_password: calvin
 bmc_reset: false
@@ -53,7 +46,6 @@ baremetal_macs: []
 baremetal_ips: []
 pullsecret: openshift_pull.json
 notifyscript: scripts/notify.sh
-virtual_protocol: ipmi
 notify: false
 launch_steps: true
 deploy_openshift: true
@@ -87,8 +79,6 @@ cas: []
 nbde: false
 ntp: false
 ntp_server: 0.rhel.pool.ntp.org
-model: dell
-patch_rhcos_image: false
 apps: []
 localhost_fix: false
 virtual_ctlplanes_static_network: False
@@ -106,4 +96,3 @@ wait_for_workers: true
 wait_for_workers_number:
 wait_for_workers_timeout: 3600
 manifests_dir: manifests
-wait_for_workers_exit_if_error: false

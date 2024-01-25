@@ -20,9 +20,6 @@ ssh-keyscan -H {{ config_host if config_host not in ['127.0.0.1', 'localhost'] e
 echo -e "Host=*\nStrictHostKeyChecking=no\n" > /root/.ssh/config
 IP=$(ip -o addr show $PRIMARY_NIC | head -1 | awk '{print $4}' | cut -d "/" -f 1 | head -1)
 echo $IP | grep -q ':' && IP=[$IP]
-sed -i "s/CHANGEME/$IP/" /root/install-config.yaml
+sed -i "s/CHANGEME/$IP/" /root/aicli_parameters.yml
 
-api_vip=$(grep apiVIP /root/install-config.yaml | sed s/apiVIP:// | xargs)
-cluster=$(grep -m 1 name /root/install-config.yaml | awk -F: '{print $2}' | xargs)
-domain=$(grep baseDomain /root/install-config.yaml | awk -F: '{print $2}' | xargs)
-echo $api_vip api.$cluster.$domain >> /etc/hosts
+echo {{ api_ip }} api.{{ cluster }}.{{ domain }} >> /etc/hosts

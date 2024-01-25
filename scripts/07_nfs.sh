@@ -3,7 +3,7 @@
 set -euo pipefail
 
 PRIMARY_NIC=$(ls -1 /sys/class/net | grep 'eth\|en' | head -1)
-export KUBECONFIG=/root/ocp/auth/kubeconfig
+export KUBECONFIG=/root/kubeconfig.{{ cluster }}
 export PRIMARY_IP=$(ip -o addr show $PRIMARY_NIC | head -1 | awk '{print $4}' | cut -d'/' -f1)
 # Latest nfs-utils 2.3.3-51 is broken
 rpm -qi nfs-utils >/dev/null 2>&1 || dnf -y install nfs-utils

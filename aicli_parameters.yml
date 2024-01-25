@@ -1,0 +1,46 @@
+{% set virtual_ctlplanes_nodes = [] %}
+{% set virtual_workers_nodes = [] %}
+{% if virtual_ctlplanes %}
+{% for num in range(0, virtual_ctlplanes_number) %}
+{% do virtual_ctlplanes_nodes.append({}) %}
+{% endfor %}
+{% endif %}
+{% if virtual_workers and virtual_workers_deploy %}
+{% for num in range(0, virtual_workers_number) %}
+{% do virtual_workers_nodes.append({}) %}
+{% endfor %}
+{% endif %}
+{% set nodes = ctlplanes + workers + virtual_ctlplanes_nodes + virtual_workers_nodes %}
+
+base_dns_domain: {{ domain }}
+manifests: manifests
+version: {{ tag }}
+api_vip: {{ api_ip }}
+ingress_vip: {{ ingress_ip }}
+{% if ':' in api_ip %}
+cluster_networks:
+- cidr: fd01::/48
+  hostPrefix: 64
+service_networks:
+ - fd02::/112
+{% endif %}
+bmc_user: {{ bmc_user }}
+bmc_password: {{ bmc_password }}
+hosts:
+{% for node in nodes %}
+{% set num = loop.index0|string %}
+{% set role = 'ctlplane' if num|int < (ctlplanes + virtual_ctlplanes_nodes)|length else 'worker' %}
+{% set url = node["redfish_address"]|default("http://127.0.0.1:9000/redfish/v1/Systems/kcli/%s-%s-%s" % (cluster, role, num)) %}
+- name: {{ cluster }}-{{ role }}-{{ num }}
+  role: {{ 'master' if role == 'ctlplane' else 'worker' }}
+  bmc_url: {{ url }}
+{% if 'bmc_user' in node %}
+  bmc_user: {{ node['bmc_user'] }}
+{% endif %}
+{% if 'bmc_password' in node %}
+  bmc_password: {{ node['bmc_password'] }}
+{% endif %}
+{% if 'disk' in node %}
+  disk: "/dev/{{ node ['disk'] | basename }}"
+{% endif %}
+{% endfor %}

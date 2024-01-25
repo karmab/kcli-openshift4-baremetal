@@ -21,7 +21,7 @@
 {% if deploy_openshift %}
  notifyscript: {{ notifyscript }}
 {% elif launch_steps %}
- notifycmd: openshift-install version
+ notifycmd: aicli list cluster
 {% else %}
  notifycmd: echo machine $(hostname) ready at $(hostname -I)
 {% endif %}
@@ -43,25 +43,23 @@
  disks:
  - {{ installer_disk_size or disk_size }}
  files:
- - install-config.yaml                                                                                                                           
+ - aicli_parameters.yml 
 {% if motd != None %}
  - path: /etc/motd
    origin: {{ motd }}
-{% endif %}
-{% if baremetal_bootstrap_ip != None %}
- - static_network/ifcfg-bootstrap
 {% endif %}
  - path: /root/.bashrc
    origin: envfiles/bashrc
  - path: /root/.kcli/config.yml
    origin: bin/kcli_config.yml
+ - registries.conf.sample
 {% if disconnected_quay and ':' in baremetal_cidr %}
  - path: /usr/lib/systemd/system/quay-haproxy.service
    origin: mirror-registry/quay_haproxy.service
  - mirror-registry/quay_haproxy.cfg
 {% endif %}
  - origin: {{ pullsecret }}
-   path: /root/openshift_pull.json                                                                                                                    
+   path: /root/openshift_pull.json
  - path: /etc/systemd/system/registry.service
    origin: bin/registry.service
 {% for ca in cas %}
@@ -74,9 +72,6 @@
  - path: /root/scripts/proxy.sh
    origin: envfiles/proxy.sh
    mode: 644
-{% endif %}
-{% if baremetal_bootstrap_ip != None %}
- - static_network/ifcfg-bootstrap
 {% endif %}
  - path: /root/bin/mapping_to_icsp.py
    origin: bin/mapping_to_icsp.py

@@ -3,9 +3,9 @@
 set -euo pipefail
 
 PRIMARY_NIC=$(ls -1 /sys/class/net | grep 'eth\|en' | head -1)
+export IP=$(ip -o addr show $PRIMARY_NIC | head -1 | awk '{print $4}' | cut -d'/' -f1)
 export PATH=/root/bin:$PATH
 export PULL_SECRET="/root/openshift_pull.json"
-export IP=$(ip -o addr show $PRIMARY_NIC | head -1 | awk '{print $4}' | cut -d'/' -f1)
 {% if disconnected_url != None %}
 {% set registry_port = disconnected_url.split(':')[-1] %}
 {% set registry_name = disconnected_url|replace(":" + registry_port, '') %}
@@ -36,45 +36,21 @@ EXTRA_OCP_RELEASE={{ release.split(':')[1] }}
 oc adm release mirror -a $PULL_SECRET --from={{ release }} --to-release-image=${LOCAL_REG}/openshift/release-images:${EXTRA_OCP_RELEASE} --to=${LOCAL_REG}/openshift/release
 {% endfor %}
 
-if [ "$(grep imageContentSources /root/install-config.yaml)" == "" ] ; then
-cat << EOF >> /root/install-config.yaml
-imageContentSources:
-- mirrors:
-  - $REGISTRY_NAME:$REGISTRY_PORT/openshift/release
-  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
-- mirrors:
-  - $REGISTRY_NAME:$REGISTRY_PORT/openshift/release-images
-{% if version == 'ci' %}
-  source: registry.ci.openshift.org/ocp/release
-{% elif version == 'nightly' %}
-  source: quay.io/openshift-release-dev/ocp-release-nightly
-{% else %}
-  source: quay.io/openshift-release-dev/ocp-release
-{% endif %}
-EOF
-else
-  IMAGECONTENTSOURCES="- mirrors:\n  - $REGISTRY_NAME:$REGISTRY_PORT/openshift/release\n  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev\n- mirrors:\n  - $REGISTRY_NAME:$REGISTRY_PORT/openshift/release-images\n  source: registry.ci.openshift.org/ocp/release"
-  sed -i "/imageContentSources/a${IMAGECONTENTSOURCES}" /root/install-config.yaml
-fi
-
-if [ "$(grep additionalTrustBundle /root/install-config.yaml)" == "" ] ; then
-  echo "additionalTrustBundle: |" >> /root/install-config.yaml
-  sed -e 's/^/  /' /opt/registry/certs/domain.crt >>  /root/install-config.yaml
-else
-  LOCALCERT="-----BEGIN CERTIFICATE-----\n $(grep -v CERTIFICATE /opt/registry/certs/domain.crt | tr -d '[:space:]')\n -----END CERTIFICATE-----"
-  sed -i "/additionalTrustBundle/a${LOCALCERT}" /root/install-config.yaml
-  sed -i 's/^-----BEGIN/ -----BEGIN/' /root/install-config.yaml
-fi
 echo $REGISTRY_NAME:$REGISTRY_PORT/openshift/release-images:$OCP_RELEASE > /root/version.txt
+echo -e "onprem_ip: $IP" >> /root/aicli_parameters.yml
+echo -e "ocp_release_image: $REGISTRY_NAME:$REGISTRY_PORT/openshift/release-images:$OCP_RELEASE" >> /root/aicli_parameters.yml
 
-if [ "$(grep pullSecret /root/install-config.yaml)" == "" ] ; then
-DISCONNECTED_PULLSECRET=$(cat /root/disconnected_pull.json | tr -d [:space:])
-echo -e "pullSecret: |\n  $DISCONNECTED_PULLSECRET" >> /root/install-config.yaml
-fi
+# if [ "$(grep pull_secret /root/aicli_parameters.yml)" == "" ] ; then
+# echo -e "pull_secret: /root/disconnected_pull.json" >> /root/aicli_parameters.yml
+# fi
+
+mkdir /root/containers
+export REGISTRY=$REGISTRY_NAME:$REGISTRY_PORT
+envsubst < /root/registries.conf.sample > /root/containers/registries.conf
 
 cp /root/machineconfigs/99-operatorhub.yaml /root/manifests
 
-{% for image in disconnected_extra_images %}
+{% for image in disconnected_extra_images + ['quay.io/edge-infrastructure/assisted-installer-agent:latest', 'quay.io/edge-infrastructure/assisted-installer:latest', 'quay.io/edge-infrastructure/assisted-installer-controller:latest'] %}
 echo "Syncing image {{ image }}"
 /root/bin/sync_image.sh {{ image }}
 {% endfor %}

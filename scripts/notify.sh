@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-export KUBECONFIG=/root/ocp/auth/kubeconfig
+export KUBECONFIG=/root/kubeconfig.{{ cluster }}
 echo "Report from vm: $(hostname) ip: $(hostname -I | cut -d' ' -f1)"
 echo "Update time: $(uptime | awk '{ print $3 }' | sed 's/,//')"
 echo "Cluster info:"

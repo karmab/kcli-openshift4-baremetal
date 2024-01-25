@@ -1,0 +1,50 @@
+unqualified-search-registries = ["registry.access.redhat.com", "docker.io"]
+short-name-mode = ""
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/edge-infrastructure"
+
+  [[registry.mirror]]
+    location = "$REGISTRY/edge-infrastructure"
+    pull-from-mirror = "all"
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/openshift-release-dev/ocp-release"
+
+  [[registry.mirror]]
+    location = "$REGISTRY/openshift/release-images"
+    pull-from-mirror = "digest-only"
+
+[[registry]]
+  prefix = ""
+  location = "quay.io/openshift-release-dev/ocp-v4.0-art-dev"
+
+  [[registry.mirror]]
+    location = "$REGISTRY/openshift/release"
+    pull-from-mirror = "digest-only"
+
+[[registry]]
+  prefix = ""
+  location = "registry.ci.openshift.org/ocp/release"
+
+  [[registry.mirror]]
+    location = "$REGISTRY/openshift/release-images"
+    pull-from-mirror = "digest-only"
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/multicluster-engine"
+
+  [[registry.mirror]]
+    location = "$REGISTRY/multicluster-engine"
+    pull-from-mirror = "digest-only"
+
+[[registry]]
+  prefix = ""
+  location = "registry.redhat.io/rhel8"
+
+  [[registry.mirror]]
+    location = "$REGISTRY/rhel8"
+    pull-from-mirror = "digest-only"
