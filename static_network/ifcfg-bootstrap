@@ -1,8 +1,0 @@
-{% set gateway = static_baremetal_gateway or baremetal_cidr|network_ip(1 if lab else -2) %}
-DEVICE=ens3
-NM_CONTROLLED=yes
-BOOTPROTO=static
-IPADDR={{ baremetal_bootstrap_ip }}
-PREFIX={{ baremetal_cidr.split('/')[1] }}
-GATEWAY={{ gateway }}
-DNS1={{ static_baremetal_dns or gateway }}

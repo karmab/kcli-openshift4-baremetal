@@ -192,3 +192,4 @@ if [ ! -z "$POOLS" ] ; then
     kcli -C $CLIENT delete pool --yes $POOL
   done
 fi
+kcli delete iso --yes $CLUSTER.iso || true

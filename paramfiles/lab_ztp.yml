@@ -8,7 +8,7 @@ domain: karmalabs.corp
 baremetal_cidr: 192.168.130.0/24
 baremetal_net: lab-baremetal
 virtual_ctlplanes_memory: 16384
-virtual_ctlplanes_numcpus: 8
+virtual_ctlplanes_numcpus: 16
 api_ip: 192.168.130.253
 ingress_ip: 192.168.130.252
 baremetal_ips:
@@ -27,8 +27,6 @@ ztp_spokes:
   ctlplanes_number: 1
   workers_number: 0
   virtual_nodes_number: 1
-disk_size: 60
-installer_disk_size: 200
 lab_extra_dns:
 - assisted-service-multicluster-engine
 - assisted-service-assisted-installer

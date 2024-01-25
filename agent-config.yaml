@@ -1,0 +1,46 @@
+{% set virtual_ctlplanes_nodes = [] %}
+{% set virtual_workers_nodes = [] %}
+{% if virtual_ctlplanes %}
+{% for num in range(0, virtual_ctlplanes_number) %}
+{% do virtual_ctlplanes_nodes.append({}) %}
+{% endfor %}
+{% endif %}
+{% if virtual_workers and virtual_workers_deploy %}
+{% for num in range(0, virtual_workers_number) %}
+{% do virtual_workers_nodes.append({}) %}
+{% endfor %}
+{% endif %}
+{% set hosts = ctlplanes + virtual_ctlplanes_nodes + workers + virtual_workers_nodes %}
+
+apiVersion: v1alpha1
+kind: AgentConfig
+metadata:
+  name: {{ cluster }}
+rendezvousIP: {{ rendezvous_ip|default(baremetal_ips[0]) }}
+hosts:
+{% for host in hosts %}
+- hostname: {{ host['name']|default(cluster + "-" + loop.index0|string) }}.{{ domain }}
+{% if 'disk' in host %}
+  rootDeviceHints:
+    deviceName: "/dev/{{ host['disk'] | basename }}"
+{% elif 'hctl' in host %}
+  rootDeviceHints:
+    hctl: "{{ host['hctl'] }}"
+{% elif 'serial' in host %}
+  rootDeviceHints:
+    serialNumber: "{{ host['serial'] }}"
+{% elif 'wwn' in host %}
+  rootDeviceHints:
+    wwn: "{{ host['wwn'] }}"
+{% endif %}
+  interfaces:
+  - macAddress: {{ baremetal_macs[loop.index0] }}
+    name: {{ host['nic']|default('ens3') }}
+  {% if 'ip' in host %}
+  networkConfig:
+        {{ static_network.config(host['ip'], baremetal_prefix, host['gateway']|default(baremetal_gateway), host['dns']|default(baremetal_dns), cluster, domain, host['nic']|default(nic)) }}
+  {% elif 'network_config' in host %}
+  networkConfig:
+        {{ host['network_config']|replace('\n', '\n        ') }}
+  {% endif %}
+{% endfor %}
