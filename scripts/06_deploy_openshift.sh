@@ -50,6 +50,11 @@ mkdir -p ocp/openshift
 cp install-config.yaml ocp 
 cp agent-config.yaml ocp
 
+{% if upstream %}
+# export OPENSHIFT_INSTALL_OS_IMAGE_OVERRIDE=https://mirror.openshift.com/pub/openshift-v4/x86_64/dependencies/rhcos/4.16/4.16.3/rhcos-4.16.3-x86_64-live.x86_64.iso
+export OPENSHIFT_INSTALL_OS_IMAGE_OVERRIDE=http://10.6.118.11/scos-live.iso
+{% endif %}
+
 if find manifests/*y*ml -quit &> /dev/null ; then
 cp manifests/*y*ml >/dev/null 2>&1 ocp/openshift
 openshift-install agent create cluster-manifests --dir ocp

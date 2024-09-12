@@ -25,7 +25,7 @@ kcli download kubectl
 mv kubectl /usr/bin
 chmod u+x /usr/bin/kubectl
 
-kcli download openshift-install -P version={{ version }} -P tag={{ tag }} -P pull_secret=/root/openshift_pull.json
+kcli download openshift-install -P version={{ version }} -P tag={{ tag }} -P pull_secret=/root/openshift_pull.json -P upstream={{ okd }}
 mv openshift-install /usr/bin
 chmod u+x /usr/bin/openshift-install
 openshift-install version | grep 'release image' | cut -d' ' -f3 > /root/version.txt

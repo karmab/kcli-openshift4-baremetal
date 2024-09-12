@@ -115,3 +115,4 @@ ztp_disable_validations: true
 ztp_domain:
 ztp_virtual_nodes_static_network: false
 KUBECONFIG:
+okd: false
