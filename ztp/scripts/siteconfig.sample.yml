@@ -6,22 +6,22 @@ metadata:
   name: example-standard
   namespace: example-standard
 spec:
-  baseDomain: {{ ztp_domain or '${DOMAIN}' }}
+  baseDomain: {{ spoke_domain or '${DOMAIN}' }}
   pullSecretRef:
     name: assisted-deployment-pull-secret
   clusterImageSetNameRef: openshift-v${MINOR}
   sshPublicKey: ${SSH_PUB_KEY}
   clusters:
-{% for spoke in ztp_spokes %}
-{% set new_value = spoke["virtual_nodes_number"]|default(0) %}
+{% for spoke in spokes %}
+{% set new_value = spoke["virtual_nodes"]|default(0) %}
 {% set spoke_name = spoke.name %}
-{% set spoke_network_type = spoke.get('network_type', ztp_spoke_network_type) %}
+{% set spoke_network_type = spoke.get('network_type', spoke_network_type) %}
 {% set spoke_api_ip = spoke.get('api_ip') %}
 {% set spoke_ingress_ip= spoke.get('ingress_ip') %}
-{% set spoke_ctlplanes_number = spoke.get('ctlplanes_number', 1) %}
-{% set spoke_workers_number = spoke.get('workers_number', 0) %}
+{% set spoke_ctlplanes_number = spoke.get('ctlplanes', 1) %}
+{% set spoke_workers_number = spoke.get('workers', 0) %}
 {% set spoke_snoplus = True if spoke_ctlplanes_number == 1 and spoke_workers_number == 1 else False %}
-{% set virtual_nodes_number = spoke["virtual_nodes_number"]|default(0) %}
+{% set virtual_nodes_number = spoke.get('virtual_nodes', 0) %}
 {% set ipv6 = True if (spoke_api_ip != None and ':' in spoke_api_ip) or ':' in baremetal_cidr  else False %}
 {% set cluster_network_ipv6 = {"cidr": "fd01::/48", "hostPrefix": 64} %}
 {% set cluster_network_ipv4 = {"cidr": "10.132.0.0/14", "hostPrefix": 23} %}
@@ -32,7 +32,7 @@ spec:
 {% set protocol = 'ipv6' if ipv6 else 'ipv4' %}
 {% set dualprotocol = 'ipv4' if ipv6 else 'ipv6' %}
 {% set default_prefix = baremetal_cidr.split('/')[1] %}
-{% set default_gateway = baremetal_cidr|network_ip(1 if lab else -2) %}
+{% set default_gateway = baremetal_cidr|network_ip(1 if create_network else -2) %}
 {% set baremetal_gateway = static_baremetal_gateway or default_gateway %}
 {% if dns %}
 {% set baremetal_dns = installer_ip %}
@@ -58,15 +58,12 @@ spec:
 {% set service_networks = service_network_ipv4 %}
 {% endif %}
 {% set spoke_name = spoke.name %}
-{% set virtual_nodes_number = spoke["virtual_nodes_number"]|default(0) %}
-{% set nodes = spoke["nodes"]|default([]) %}
-{% if not virtual_workers %}
-{% set virtual_workers_number = 0 %}
-{% endif %}
+{% set virtual_nodes_number = spoke.get('virtual_nodes', 0) %}
+{% set nodes = spoke.get('baremetal_nodes', []) %}
 {% if virtual_nodes_number > 0 %}
 {% set extra_nodes = [] %}
 {% for num in range(0, virtual_nodes_number) %}
-{% set new_node = {'ip': baremetal_ips[virtual_ctlplanes_number + virtual_workers_number + total_number.value + num]} if ztp_virtual_nodes_static_network and baremetal_ips|length > virtual_ctlplanes_number + virtual_workers_number + total_number.value + num else {} %}
+{% set new_node = {'ip': baremetal_ips[ctlplanes + workers + total_number.value + num]} if static_network and baremetal_ips|length > ctlplanes + workers + total_number.value + num else {} %}
 {% do extra_nodes.append(new_node) %}
 {% endfor %}
 {% set nodes = extra_nodes + nodes %}
@@ -103,10 +100,8 @@ spec:
 {% set max_ctlplanes = 1 if spoke_snoplus else 3 %}
 {% if 'provisioning_mac' in node %}
 {% set mac = node['provisioning_mac'] %}
-{% elif baremetal_macs and baremetal_macs|length > virtual_ctlplanes_number + virtual_workers_number + total_number.value + num %}
-{% set mac = baremetal_macs[virtual_ctlplanes_number + virtual_workers_number + total_number.value + num] %}
 {% else %}
-{% set mac = ztp_virtual_nodes_baremetal_mac_prefix + ":" + "%02.d" | format(total_number.value + num + 1)| string %}
+{% set mac = baremetal_macs[ctlplanes + workers + total_number.value + num] %}
 {% endif %}
     - hostName: {{ cluster }}-{{ spoke_name }}-node-{{ num }}
       role: {{ "master" if num < max_ctlplanes else "worker" }}
@@ -125,7 +120,7 @@ spec:
       bmcCredentialsName:
         name: {{ cluster }}-ztp-{{ spoke_name }}-bmc-secret-{{ num }}
       bootMACAddress: {{ mac }}
-      bootMode: {{ 'UEFI' if ztp_uefi else 'legacy' }}
+      bootMode: {{ 'UEFI' if spoke_uefi else 'legacy' }}
       rootDeviceHints:
        deviceName: /dev/{{ node.disk|default('sda')|string|basename }}
 {% if 'ip' in node %}

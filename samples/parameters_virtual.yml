@@ -2,9 +2,9 @@ cluster: emmet
 domain: brown.com
 version: stable
 tag: "4.10"
-virtual_ctlplanes: True
-virtual_ctlplanes_number: 3
-virtual_workers: False
+virtual_hub: true
+ctlplanes: 3
+workers: 0
 bmc_user: marty
 bmc_password: mcfly
 baremetal_cidr: 11.0.0.0/24

@@ -46,8 +46,7 @@ pullsecret: openshift_pull.json
 notifyscript: scripts/notify.sh
 notify: false
 launch_steps: true
-deploy_openshift: true
-lab: false
+deploy_hub: true
 motd:
 disconnected: false
 disconnected_quay: false
@@ -80,8 +79,7 @@ ntp: false
 ntp_server: 0.rhel.pool.ntp.org
 apps: []
 localhost_fix: false
-virtual_ctlplanes_static_network: false
-virtual_workers_static_network: false
+static_network: false
 schedulable_ctlplanes: false
 cpu_partitioning: false
 static_baremetal_gateway:
@@ -97,22 +95,22 @@ wait_for_workers_timeout: 3600
 manifests_dir: manifests
 workflow_installer: false
 
-ztp_acm: true
-ztp_gitops_user: dummy
-ztp_gitops_password: dummy
-ztp_gitops_repo_branch: main
-ztp_gitops_repo_url:
-ztp_gitops_clusters_app_path: site-configs
-ztp_gitops_policies_app_path: site-policies
-ztp_policies_dir: ztp_policies_dir
-ztp_spoke_deploy: true
-ztp_spoke_network_type: OVNKubernetes
-ztp_spoke_wait: true
-ztp_spoke_wait_time: 3600
-ztp_converged_flow: false
-ztp_disable_validations: true
-ztp_domain:
-ztp_virtual_nodes_static_network: false
+acm: true
+gitops_user: dummy
+gitops_password: dummy
+gitops_repo_branch: main
+gitops_repo_url:
+gitops_clusters_app_path: site-configs
+gitops_policies_app_path: site-policies
+spoke_policies_dir: spoke_policies_dir
+spoke_deploy: true
+spoke_network_type: OVNKubernetes
+spoke_wait: true
+spoke_wait_time: 3600
+converged_flow: false
+disable_validations: true
+spoke_domain:
+spoke_static_network: false
 KUBECONFIG:
 cluster_network_ipv4: "10.132.0.0/14"
 cluster_network_ipv6: "fd01::/48"

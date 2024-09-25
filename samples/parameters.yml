@@ -7,14 +7,14 @@ bmc_password: mcfly
 baremetal_cidr: 11.0.0.0/24
 api_ip: 11.0.0.2
 ingress_ip: 11.0.0.4
-virtual_ctlplanes: False
-ctlplanes:
+virtual_hub: False
+baremetal_ctlplanes:
 - redfish_address: 10.0.0.1
   provisioning_mac: aa:aa:aa:bb:cc:01
 - redfish_address: 10.0.0.2
   provisioning_mac: aa:aa:aa:bb:cc:02
-- ipmi_address: 10.0.0.3
+- redfish_address: 10.0.0.3
   provisioning_mac: aa:aa:aa:bb:cc:03
-workers:
+baremetal_workers:
 - redfish_address: 10.0.0.4
   provisioning_mac: aa:aa:aa:bb:cc:04

@@ -13,11 +13,11 @@ IP=$(ip -o addr show $PRIMARY_NIC | head -1 | awk '{print $4}' | cut -d'/' -f1)
 GIT_SERVER=$(echo $IP | sed 's/\./-/g' | sed 's/:/-/g').sslip.io
 {% endif %}
 
-GIT_USER={{ ztp_gitops_user }}
-export REPO_URL={{ ztp_gitops_repo_url or 'http://$GIT_SERVER:3000/karmalabs/ztp' }}
-export REPO_BRANCH={{ ztp_gitops_repo_branch }}
-export CLUSTERS_APP_PATH={{ ztp_gitops_clusters_app_path }}
-export POLICIES_APP_PATH={{ ztp_gitops_policies_app_path }}
+GIT_USER={{ gitops_user }}
+export REPO_URL={{ gitops_repo_url or 'http://$GIT_SERVER:3000/karmalabs/ztp' }}
+export REPO_BRANCH={{ gitops_repo_branch }}
+export CLUSTERS_APP_PATH={{ gitops_clusters_app_path }}
+export POLICIES_APP_PATH={{ gitops_policies_app_path }}
 export HUB={{ cluster }}
 
 {% if disconnected %}

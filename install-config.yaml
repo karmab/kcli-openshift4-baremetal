@@ -13,17 +13,17 @@
 
 {% set virtual_ctlplanes_nodes = [] %}
 {% set virtual_workers_nodes = [] %}
-{% if virtual_ctlplanes %}
-{% for num in range(0, virtual_ctlplanes_number) %}
+{% if virtual_hub %}
+{% for num in range(0, ctlplanes) %}
 {% do virtual_ctlplanes_nodes.append({}) %}
 {% endfor %}
 {% endif %}
-{% if virtual_workers and virtual_workers_deploy %}
-{% for num in range(0, virtual_workers_number) %}
+{% if virtual_hub and workers > 0 %}
+{% for num in range(0, workers) %}
 {% do virtual_workers_nodes.append({}) %}
 {% endfor %}
 {% endif %}
-{% set hosts = ctlplanes + virtual_ctlplanes_nodes + workers + virtual_workers_nodes %}
+{% set hosts = baremetal_ctlplanes + virtual_ctlplanes_nodes + baremetal_workers + virtual_workers_nodes %}
 
 apiVersion: v1
 {% if cpu_partitioning %}
@@ -34,12 +34,12 @@ compute:
 - architecture: amd64
   hyperthreading: Enabled
   name: worker
-  replicas: {{ (workers + virtual_workers_nodes)|length }}
+  replicas: {{ (baremetal_workers + virtual_workers_nodes)|length }}
 controlPlane:
   architecture: amd64
   hyperthreading: Enabled
   name: master
-  replicas: {{ (ctlplanes + virtual_ctlplanes_nodes)|length }}
+  replicas: {{ (baremetal_ctlplanes + virtual_ctlplanes_nodes)|length }}
 metadata:
   name: {{ cluster }}
 networking:

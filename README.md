@@ -104,31 +104,25 @@ Note that you can use the baseplan `kcli_plan_infra.yml` to deploy the infrastru
 |http_proxy                          |None            |
 |ingress_ip                          |None            |
 |keys                                |[]              |
-|lab                                 |False           |
-|ctlplanes                            |[]              |
+|create_network                      |False           |
 |memory                              |32768           |
 |model                               |dell            |
 |no_proxy                            |None            |
 |numcpus                             |16              |
 |pool                                |default         |
-|virtual_ctlplanes                    |True            |
-|virtual\_ctlplanes\_baremetal\_mac\_prefix|aa:aa:aa:cc:cc|
-|virtual\_ctlplanes\_mac\_prefix       |aa:aa:aa:aa:aa  |
-|virtual\_ctlplanes\_memory            |32768           |
-|virtual\_ctlplanes\_number            |3               |
-|virtual\_ctlplanes\_numcpus           |8               |
-|virtual_protocol                    |ipmi            |
+|virtual_hub                         |True            |
+|ctlplanes                           |3               |
+|ctlplane\_memory                    |32768           |
+|ctlplanes\_numcpus                  |8               |
 |virtual_workers                     |False           |
-|virtual\_workers\_baremetal\_mac\_prefix|aa:aa:aa:dd:dd|
-|virtual\_workers\_deploy            |True            |
-|virtual\_workers\_mac_prefix        |aa:aa:aa:bb:bb  |
-|virtual\_workers\_memory            |16384           |
-|virtual\_workers\_number            |1               |
-|virtual\_workers\_numcpus           |8               |
-|workers                             |[]              |
+|workers                             |0               |
+|worker\_memory                      |16384           |
+|worker\_numcpus                     |8               |
 |wait_for_workers                    |True            |
 |wait_for_workers_number             |True            |
 |wait_for_workers_exit_if_error      |False           |
+|baremetal_ctlplanes                 |[]              |
+|baremetal_workers                   |[]              |
 
 ### additional parameters
 
@@ -139,10 +133,11 @@ The following parameters are available when deploying the default plan
 |bmc_password                                 |calvin                                    |
 |bmc_user                                     |root                                      |
 |cas                                          |[]                                        |
-|deploy_openshift                             |True                                      |
+|create_network                               |False                                     |
+|deploy_hub                                   |True                                      |
 |disconnected                                 |False                                     |
 |disconnected_operators                       |[]                                        |
-|disconnected\_operators\_deploy\_after\_openshift|False                                     |
+|disconnected\_operators\_deploy\_after\_openshift|False                                 |
 |disconnected_password                        |dummy                                     |
 |disconnected_user                            |dummy                                     |
 |dualstack                                    |False                                     |
@@ -156,7 +151,6 @@ The following parameters are available when deploying the default plan
 |installer_mac                                |None                                      |
 |installer_wait                               |False                                     |
 |keys                                         |[]                                        |
-|lab                                          |False                                     |
 |launch_steps                                 |True                                      |
 |model                                        |dell                                      |
 |nfs                                          |True                                      |
@@ -173,25 +167,25 @@ The following parameters are available when deploying the default plan
 |rhnwait                                      |30                                        |
 |tag                                          |4.15                                      |
 |version                                      |stable                                    |
-|ztp_nodes                                    |[]                                        |
-|ztp\_spoke\_api\_ip                          |None                                      |
-|ztp\_spoke\_deploy                           |True                                      |
-|ztp\_spoke\_ingress\_ip                      |None                                      |
-|ztp\_spoke\_ctlplanes\_number                |1                                         |
-|ztp\_spoke\_name                             |mgmt-spoke1                               |
-|ztp\_spoke\_wait                             |False                                     |
-|ztp\_spoke\_wait_time                        |3600                                      |
-|ztp\_spoke\_workers_number                   |0                                         |
-|ztp\_virtual\_nodes                          |False                                     |
-|ztp\_virtual\_nodes\_baremetal\_mac\_prefix  |aa:aa:aa:cc:cc                            |
-|ztp\_virtual\_nodes\_disk\_size              |120                                       |
-|ztp\_virtual_nodes\_memory                   |38912                                     |
-|ztp\_virtual\_nodes\_number                  |1                                         |
-|ztp\_virtual\_nodes\_numcpus                 |8                                         |
+|spoke_nodes                                    |[]                                        |
+|spoke\_api\_ip                          |None                                      |
+|spoke\_deploy                           |True                                      |
+|spoke\_ingress\_ip                      |None                                      |
+|spoke\_ctlplanes\_number                |1                                         |
+|spoke\_name                             |mgmt-spoke1                               |
+|spoke\_wait                             |False                                     |
+|spoke\_wait_time                        |3600                                      |
+|spoke\_workers_number                   |0                                         |
+|spoke_virtual\_nodes                          |False                                     |
+|spoke\_virtual\_nodes\_baremetal\_mac\_prefix  |aa:aa:aa:cc:cc                            |
+|spoke\_virtual\_nodes\_disk\_size              |120                                       |
+|spoke\_virtual_nodes\_memory                   |38912                                     |
+|spoke\_virtual\_nodes\_number                  |1                                         |
+|spoke\_virtual\_nodes\_numcpus                 |8                                         |
 
 ### Node parameters
 
-when specifying *ctlplanes* or *workers* as an array (for baremetal nodes), the specification can be created with something like this
+when specifying *baremetal_ctlplanes* or *baremetal_workers* as an array, the specification can be created with something like this
 
 ```
 - redfish_address: 192.168.123.45

@@ -1,7 +1,7 @@
 export HOME=/root
 export PYTHONUNBUFFERED=true
 export HUB={{ cluster }}
-SPOKE_WAIT_TIME={{ ztp_spoke_wait_time }}
+SPOKE_WAIT_TIME={{ spoke_wait_time }}
 
 for SPOKE in $(cat /root/ztp/scripts/snoplus.txt) ; do
   sed -i "s/^##//" /root/git/site-configs/$HUB/siteconfig.yml

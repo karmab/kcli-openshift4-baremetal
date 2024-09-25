@@ -1,11 +1,11 @@
 export HOME=/root
 export PYTHONUNBUFFERED=true
-{% for spoke in ztp_spokes %}
-{% set spoke_deploy = spoke.get('deploy', ztp_spoke_deploy) %}
-{% set spoke_ctlplanes_number = spoke.get('ctlplanes_number', 1) %}
-{% set spoke_workers_number = spoke.get('workers_number', 0) %}
-{% if spoke_deploy and spoke.get('wait', ztp_spoke_wait) %}
-{% set spoke_wait_time = spoke.get('wait_time', ztp_spoke_wait_time) %}
+{% for spoke in spokes %}
+{% set spoke_deploy = spoke.get('deploy', spoke_deploy) %}
+{% set spoke_ctlplanes_number = spoke.get('ctlplanes', 1) %}
+{% set spoke_workers_number = spoke.get('workers', 0) %}
+{% if spoke_deploy and spoke.get('wait', spoke_wait) %}
+{% set spoke_wait_time = spoke.get('wait_time', spoke_wait_time) %}
 SPOKE={{ spoke.name }}
 kcli delete iso -y $SPOKE.iso || true
 timeout=0

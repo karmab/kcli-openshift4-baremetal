@@ -21,30 +21,25 @@ baremetal_net: baremetal
 baremetal_cidr:
 baremetal_macs: []
 baremetal_ips: []
-virtual_protocol: ipmi
-virtual_ctlplanes: false
-virtual_ctlplanes_number: 3
-virtual_ctlplanes_numcpus: 16
-virtual_ctlplanes_memory: 32768
-virtual_ctlplanes_mac_prefix: aa:aa:aa:aa:aa
-virtual_ctlplanes_baremetal_mac_prefix: aa:aa:aa:cc:cc
-virtual_workers: false
-virtual_workers_number: 2
-virtual_workers_numcpus: 16
-virtual_workers_memory: 20480
-virtual_workers_mac_prefix: aa:aa:aa:bb:bb
-virtual_workers_baremetal_mac_prefix: aa:aa:aa:dd:dd
-virtual_workers_deploy: true
-lab: false
-lab_dhcp: true
-lab_extra_dns: []
+baremetal_ctlplanes: []
+baremetal_workers: []
 model: dell
+virtual_hub: true
+numcpus: 16
+memory: 32768
+ctlplanes: 3
+ctlplane_numcpus:
+ctlplane_memory:
+workers: 0
+worker_numcpus:
+worker_memory:
+dhcp: false
+create_network: false
 
-ztp_virtual_nodes_number: 1
-ztp_virtual_nodes_numcpus: 8
-ztp_virtual_nodes_memory: 38912
-ztp_virtual_nodes_disk_size: 120
-ztp_virtual_nodes_disk_interface: scsi
-ztp_virtual_nodes_baremetal_mac_prefix: aa:aa:aa:cc:cc
-ztp_uefi: true
-ztp_spokes: []
+spoke_virtual_nodes_number: 1
+spoke_numcpus: 8
+spoke_memory: 38912
+spoke_disk_size: 120
+spoke_disk_interface: scsi
+spoke_uefi: true
+spokes: []

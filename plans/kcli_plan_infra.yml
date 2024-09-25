@@ -3,84 +3,70 @@
 {% do virtual_disks.append({'size': extra_disk, 'interface': disk_interface}) %}
 {% endfor %}
 
-{% if lab %}
+{% if create_network %}
 {{ baremetal_net }}:
  type: network
  cidr: {{ baremetal_cidr }}
- dhcp: {{ lab_dhcp }}
-{% if lab_domain is defined %}
- domain: {{ lab_domain }}
-{% endif %}
+ dhcp: {{ not dhcp }}
+ domain: {{ domain }}
 {% if (dualstack or dual_force|default(False)) and dualstack_cidr != None %}
  dual_cidr: {{ dualstack_cidr }}
 {% endif %}
 {% endif %}
 
-{% if virtual_ctlplanes %}
-{% for num in range(0, virtual_ctlplanes_number) %}
+{% if virtual_hub %}
+{% for num in range(0, ctlplanes) %}
 {{ cluster }}-ctlplane-{{ num }}:
  pool: {{ pool }} 
  redfish_iso: {{ cluster }}.iso
  image:
- numcpus: {{ virtual_ctlplanes_numcpus }}
+ numcpus: {{ ctlplane_numcpus or numcpus }}
  cloudinit: false
  start: false
  uefi_legacy: {{ 'true' if not uefi|default(False) else 'false' }}
  boot_order: {{ extra_disks|length > 0 }}
  user: core
- memory: {{ virtual_ctlplanes_memory }}
+ memory: {{ ctlplane_memory or memory }}
  nets:
  - name: {{ baremetal_net }}
-{% if baremetal_macs and baremetal_macs|length > num %}
    mac: {{ baremetal_macs[num] }}
-{% else %}
-   mac: {{ virtual_ctlplanes_baremetal_mac_prefix + ":" + "%02.d" | format(num + 1)| string }}
-{% endif %}
  disks: {{ virtual_disks }}
 {% endfor %}
 {% endif %}
 
-{% if virtual_workers %}
-{% for num in range(0, virtual_workers_number) %}
+{% if virtual_hub and workers > 0 %}
+{% for num in range(0, workers) %}
 {{ cluster }}-worker-{{ num }}:
  pool: {{ pool }} 
  redfish_iso: {{ cluster }}.iso
  image:
- numcpus: {{ virtual_workers_numcpus }}
+ numcpus: {{ worker_numcpus or numcpus }}
  start: false
  cloudinit: false
  uefi_legacy: true
  boot_order: {{ extra_disks|length > 0 }}
  user: core
- memory: {{ virtual_workers_memory }}
+ memory: {{ worker_memory or memory }}
  nets:
  - name: {{ baremetal_net }}
-{% if baremetal_macs and baremetal_macs|length > virtual_ctlplanes_number + num %}
-   mac: {{ baremetal_macs[virtual_ctlplanes_number + num] }}
-{% else %}
-   mac: {{ virtual_workers_baremetal_mac_prefix + ":" + "%02.d" | format(num + 1)| string }}
-{% endif %}
+   mac: {{ baremetal_macs[ctlplanes + num] }}
  disks: {{ virtual_disks }}
 {% endfor %}
 {% endif %}
 
-{% if not virtual_workers %}
-{% set virtual_workers_number = 0 %}
-{% endif %}
-
 {% set total_number = namespace(value=0) %}
-{% for spoke in ztp_spokes %}
+{% for spoke in spokes %}
 {% set spoke_name = spoke.name %}
 {% set spoke_api_ip = spoke.get('api_ip') %}
 {% set spoke_ingress_ip= spoke.get('ingress_ip') %}
-{% set spoke_ctlplanes_number = spoke.get('ctlplanes_number', 1) %}
-{% set spoke_workers_number = spoke.get('workers_number', 0) %}
-{% set virtual_nodes_number = spoke.get('virtual_nodes_number', 0) %}
-{% set ztp_uefi = spoke.get('uefi', ztp_uefi) %}
-{% set ztp_virtual_nodes_numcpus = spoke.get('virtual_nodes_numcpus', ztp_virtual_nodes_numcpus) %}
-{% set ztp_virtual_nodes_memory = spoke.get('virtual_nodes_memory', ztp_virtual_nodes_memory) %}
-{% set ztp_virtual_nodes_disk_size = spoke.get('virtual_nodes_disk_size', ztp_virtual_nodes_disk_size) %}
-{% set ztp_virtual_nodes_disk_interface = spoke.get('virtual_nodes_disk_interface', ztp_virtual_nodes_disk_interface) %}
+{% set spoke_ctlplanes_number = spoke.get('ctlplanes', 1) %}
+{% set spoke_workers_number = spoke.get('workers', 0) %}
+{% set virtual_nodes_number = spoke.get('virtual_nodes', 0) %}
+{% set spoke_uefi = spoke.get('uefi', spoke_uefi) %}
+{% set spoke_virtual_nodes_numcpus = spoke.get('virtual_nodes_numcpus', spoke_virtual_nodes_numcpus) %}
+{% set spoke_virtual_nodes_memory = spoke.get('virtual_nodes_memory', spoke_virtual_nodes_memory) %}
+{% set spoke_virtual_nodes_disk_size = spoke.get('virtual_nodes_disk_size', spoke_virtual_nodes_disk_size) %}
+{% set spoke_virtual_nodes_disk_interface = spoke.get('virtual_nodes_disk_interface', spoke_virtual_nodes_disk_interface) %}
 
 {% if virtual_nodes_number > 0 %}
 {% for num in range(0, virtual_nodes_number) %}
@@ -89,23 +75,19 @@
  pool: {{ pool }}
  redfish_iso: {{ spoke_name }}.iso
  image:
- numcpus: {{ ztp_virtual_nodes_numcpus }}
+ numcpus: {{ spoke_numcpus }}
  start: false
  cloudinit: false
- uefi_legacy: {{ 'false' if uefi|default(False) else ztp_uefi }}
+ uefi_legacy: {{ 'false' if uefi|default(False) else spoke_uefi }}
  user: core
- memory: {{ ztp_virtual_nodes_memory }}
+ memory: {{ spoke_memory }}
  nets:
  - name: {{ baremetal_net }}
-{% if baremetal_macs and baremetal_macs|length > virtual_ctlplanes_number + virtual_workers_number + total_number.value + num %}
-   mac: {{ baremetal_macs[virtual_ctlplanes_number + virtual_workers_number + total_number.value + num] }}
-{% else %}
-   mac: {{ ztp_virtual_nodes_baremetal_mac_prefix + ":" + "%02.d" | format(total_number.value + num + 1)| string }}
-{% endif %}
+   mac: {{ baremetal_macs[ctlplanes + workers + total_number.value + num] }}
  disks:
- - size: {{ ztp_virtual_nodes_disk_size }}
-   interface: {{ ztp_virtual_nodes_disk_interface }}
+ - size: {{ spoke_disk_size }}
+   interface: {{ spoke_disk_interface }}
 {% endfor %}
-{% set total_number.value = total_number.value + ztp_virtual_nodes_number %}
+{% set total_number.value = total_number.value + spoke_virtual_nodes_number %}
 {% endif %}
 {% endfor %}

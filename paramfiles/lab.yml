@@ -1,6 +1,6 @@
-lab: true
+create_network: true
 pool: default
-virtual_ctlplanes: true
+virtual_hub: true
 version: stable
 tag: "4.16"
 cluster: lab
@@ -23,19 +23,19 @@ baremetal_macs:
 - aa:aa:aa:aa:bb:04
 
 disconnected: true
-ztp_spoke_wait: true
-ztp_spokes:
+spoke_wait: true
+spokes:
 - name: mgmt-spoke1
-  ctlplanes_number: 1
-  workers_number: 0
-  virtual_nodes_number: 1
+  ctlplanes: 1
+  workers: 0
+  virtual_nodes: 1
   virtual_nodes_numcpus: 16
   virtual_nodes_memory: 38912
 installer_disk_size: 200
 notify: true
 nfs: true
 
-ztp_policies_dir: extras/sample-site-policies
+policies_dir: extras/sample-site-policies
 vmrules:
 - lab-mgmt-spoke1-node-0:
    boot_order: true

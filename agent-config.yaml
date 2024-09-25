@@ -1,6 +1,6 @@
 {% import 'static_network/config.j2' as static_network %}
 {% set baremetal_prefix = baremetal_cidr.split('/')[1] %}
-{% set baremetal_gateway = static_baremetal_gateway or baremetal_cidr|network_ip(1 if lab else -2) %}
+{% set baremetal_gateway = static_baremetal_gateway or baremetal_cidr|network_ip(1 if create_network else -2) %}
 {% if dns %}
 {% set baremetal_dns = installer_ip %}
 {% else %}
@@ -9,19 +9,19 @@
 {% set nic = 'ens192' if config_type == 'vsphere' else 'enp1s0' %}
 {% set virtual_ctlplanes_nodes = [] %}
 {% set virtual_workers_nodes = [] %}
-{% if virtual_ctlplanes %}
-{% for num in range(0, virtual_ctlplanes_number) %}
-{% set new_ctlplane = {'ip': baremetal_ips[num]} if virtual_ctlplanes_static_network and baremetal_ips|length > num else {} %}
+{% if virtual_hub %}
+{% for num in range(0, ctlplanes) %}
+{% set new_ctlplane = {'ip': baremetal_ips[num]} if static_network and baremetal_ips|length > num else {} %}
 {% do virtual_ctlplanes_nodes.append(new_ctlplane) %}
 {% endfor %}
 {% endif %}
-{% if virtual_workers and virtual_workers_deploy %}
-{% for num in range(0, virtual_workers_number) %}
-{% set new_worker = {'ip': baremetal_ips[num]} if virtual_workers_static_network and baremetal_ips|length > virtual_ctlplanes_number + num else {} %}
+{% if virtual_hub and workers > 0 %}
+{% for num in range(0, workers) %}
+{% set new_worker = {'ip': baremetal_ips[num]} if static_network and baremetal_ips|length > ctlplanes + num else {} %}
 {% do virtual_workers_nodes.append(new_worker) %}
 {% endfor %}
 {% endif %}
-{% set hosts = ctlplanes + virtual_ctlplanes_nodes + workers + virtual_workers_nodes %}
+{% set hosts = baremetal_ctlplanes + virtual_ctlplanes_nodes + baremetal_workers + virtual_workers_nodes %}
 
 apiVersion: v1alpha1
 kind: AgentConfig

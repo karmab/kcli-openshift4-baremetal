@@ -5,7 +5,7 @@ export PATH=/root/bin:$PATH
 dnf -y install httpd
 systemctl enable --now httpd
 
-{% if ztp_acm %}
+{% if acm %}
 APP=advanced-cluster-management
 SOURCE_ARGS="-P acm_mce_catalog=$(kcli info app openshift multicluster-engine | grep ^source: | cut -d: -f2 | xargs)"
 {% else %}
@@ -28,7 +28,7 @@ DISCONNECTED_ARGS="-P disconnected_url=${REGISTRY_NAME}:$LOCAL_PORT"
 DISCONNECTED_ARGS=""
 {% endif %}
 
-EXTRA_ARGS="{{ ' -P assisted=true -P pull_secret=/root/openshift_pull.json -P assisted_disable_validations=true' if ztp_disable_validations|default(False) else '' }}{{  ' -P assisted_converged_flow=true' if ztp_converged_flow|default(False) else '' }}"
+EXTRA_ARGS="{{ ' -P assisted=true -P pull_secret=/root/openshift_pull.json -P assisted_disable_validations=true' if disable_validations|default(False) else '' }}{{  ' -P assisted_converged_flow=true' if converged_flow|default(False) else '' }}"
 
 kcli create app openshift $APP $DISCONNECTED_ARGS $SOURCE_ARGS $EXTRA_ARGS
 sleep 120

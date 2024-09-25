@@ -10,21 +10,21 @@ export KUBECONFIG=/root/ocp/auth/kubeconfig
 
 {% set virtual_ctlplanes_nodes = [] %}
 {% set virtual_workers_nodes = [] %}
-{% if virtual_ctlplanes %}
-{% for num in range(0, virtual_ctlplanes_number) %}
+{% if virtual_hub %}
+{% for num in range(0, ctlplanes) %}
 {% do virtual_ctlplanes_nodes.append({}) %}
 {% endfor %}
 {% endif %}
-{% if virtual_workers and virtual_workers_deploy %}
-{% for num in range(0, virtual_workers_number) %}
+{% if virtual_hub and workers > 0 %}
+{% for num in range(0, workers) %}
 {% do virtual_workers_nodes.append({}) %}
 {% endfor %}
 {% endif %}
-{% set hosts = ctlplanes + workers + virtual_ctlplanes_nodes + virtual_workers_nodes %}
+{% set hosts = baremetal_ctlplanes + baremetal_workers + virtual_ctlplanes_nodes + virtual_workers_nodes %}
 
 {% for host in hosts %}
 {% set num = loop.index0|string %}
-{% set role = 'ctlplane' if num|int < (ctlplanes + virtual_ctlplanes_nodes)|length else 'worker' %}
+{% set role = 'ctlplane' if num|int < (baremetal_ctlplanes + virtual_ctlplanes_nodes)|length else 'worker' %}
 {% set url = host["redfish_address"]|default("http://127.0.0.1:9000/redfish/v1/Systems/kcli/%s-%s-%s" % (cluster, role, num)) %}
 {% set user = host['bmc_user']|default(bmc_user) %}
 {% set password = host['bmc_password']|default(bmc_password) %}
@@ -69,7 +69,7 @@ IP=$(ip -o addr show $PRIMARY_NIC | head -1 | awk '{print $4}' | cut -d "/" -f 1
 echo $IP | grep -q ':' && IP=[$IP]
 {% for host in hosts %}
 {% set num = loop.index0|string %}
-{% set role = 'ctlplane' if num|int < (ctlplanes + virtual_ctlplanes_nodes)|length else 'worker' %}
+{% set role = 'ctlplane' if num|int < (baremetal_ctlplanes + virtual_ctlplanes_nodes)|length else 'worker' %}
 {% set url = host["redfish_address"]|default("http://127.0.0.1:9000/redfish/v1/Systems/kcli/%s-%s-%s" % (cluster, role, num)) %}
 {% set user = host['bmc_user']|default(bmc_user) %}
 {% set password = host['bmc_password']|default(bmc_password) %}
@@ -84,7 +84,7 @@ echo $SNO_IP api.{{ cluster }}.{{ domain }} >> /etc/hosts
 
 openshift-install --dir ocp --log-level debug wait-for install-complete || openshift-install --dir ocp --log-level debug wait-for install-complete
 
-{% if virtual_ctlplanes %}
+{% if virtual_hub %}
 for node in $(oc get nodes --selector='node-role.kubernetes.io/master' -o name) ; do
   oc label $node node-role.kubernetes.io/virtual=""
 done

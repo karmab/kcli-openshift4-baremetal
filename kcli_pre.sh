@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-
 # CLEANING
 kcli delete iso --yes {{ cluster }}.iso || true
 
@@ -18,13 +17,12 @@ exit 1
 {% endif %}
 
 {% set virtual_ctlplanes_nodes = [] %}
-{% set virtual_workers_nodes = [] %}
-{% if virtual_ctlplanes %}
-{% for num in range(0, virtual_ctlplanes_number) %}
+{% if virtual_hub %}
+{% for num in range(0, ctlplanes) %}
 {% do virtual_ctlplanes_nodes.append({}) %}
 {% endfor %}
 {% endif %}
-{% set ctlplanes_hosts = ctlplanes + virtual_ctlplanes_nodes %}
+{% set ctlplanes_hosts = baremetal_ctlplanes + virtual_ctlplanes_nodes %}
 
 {% if ctlplanes_hosts|length > 1 and api_ip == None %}
 echo api_ip not set. No network, no party!
@@ -98,7 +96,7 @@ echo dualstack_cidr needs to be ipv6 for dual stack
 {% endif %}
 {% endif %}
 
-{% if config_host in ['127.0.0.1', 'localhost'] and not lab %}
+{% if config_host in ['127.0.0.1', 'localhost'] and not create_network %}
 {% set baremetal_bridge = baremetal_net if baremetal_net != 'default' else 'virbr0' %}
 ip a l {{ baremetal_bridge }} >/dev/null 2>&1 || { echo Issue with network {{ baremetal_net }} ; exit 1; }
 {% endif %}
@@ -159,24 +157,25 @@ echo disconnected_password will be forced to super{{ disconnected_password }}
 {% endif %}
 
 # ZTP CHECKS
-{% for spoke in ztp_spokes %}
+{% set total_spoke_nodes_number = namespace(value=0) %}
+{% for spoke in spokes %}
 {% set spoke_name = spoke.get('name') %}
 {% set spoke_api_ip = spoke.get('api_ip') %}
 {% set spoke_ingress_ip= spoke.get('ingress_ip') %}
-{% set spoke_ctlplanes_number = spoke.get('ctlplanes_number', 1) %}
-{% set spoke_workers_number = spoke.get('workers_number', 0) %}
-{% set virtual_nodes_number = spoke["virtual_nodes_number"]|default(0) %}
+{% set spoke_ctlplanes_number = spoke.get('ctlplanes', 1) %}
+{% set spoke_workers_number = spoke.get('workers', 0) %}
+{% set virtual_nodes_number = spoke.get('virtual_nodes', 0) %}
 {% if spoke_name == None %}
-echo spoke_name needs to be on each entry of ztp_spokes && exit 1
+echo spoke_name needs to be on each entry of spokes && exit 1
 {% elif '_' in spoke_name %}
 echo Incorrect spoke_name {{ spoke_name }}: cant contain an underscore && exit 1
 {% endif %}
 kcli delete iso --yes {{ spoke_name }}.iso || true
 {% if spoke_ctlplanes_number <= 0 %}
-echo Incorrect spoke_ctlplanes_number {{ spoke_ctlplanes_number }} in {{ spoke_name }}: must be higher than 0 && exit 1
+echo Incorrect spoke ctlplanes {{ spoke_ctlplanes_number }} in {{ spoke_name }}: must be higher than 0 && exit 1
 {% endif %}
 {% if spoke_workers_number < 0 %}
-echo Incorrect spoke_workers_number {{ spoke_workers_number }} in {{ spoke_name }}: cant be negative && exit 1
+echo Incorrect spoke workers {{ spoke_workers_number }} in {{ spoke_name }}: cant be negative && exit 1
 {% endif %}
 {% if spoke_ctlplanes_number > 1 %}
 {% if spoke_api_ip == None %}
@@ -186,4 +185,25 @@ echo no spoke_api_ip. This is mandatory for an HA spoke && exit 1
 echo no spoke_ingress_ip. This is mandatory for an HA spoke && exit 1
 {% endif %}
 {% endif %}
+{% set total_spoke_nodes_number.value = total_spoke_nodes_number.value + spoke_ctlplanes_number + spoke_workers_number %}
 {% endfor %}
+
+{% set total_ctlplanes = baremetal_ctlplanes|length %}
+{% if virtual_hub %}
+{% set total_ctlplanes = total_ctlplanes + ctlplanes %}
+{% endif %}
+{% set total_workers = baremetal_workers|length %}
+{% if virtual_hub %}
+{% set total_workers = total_workers + workers %}
+{% endif %}
+{% set total_hub_nodes_number = total_ctlplanes + total_workers %}
+
+{% if baremetal_ips|length == 0 %}
+echo You need to populate baremetal_ips with at least one ip for rendezvous
+exit 1
+{% endif %}
+
+{% if baremetal_macs|length < total_hub_nodes_number + total_spoke_nodes_number.value %}
+echo You need to populate baremetal_macs with the complete list of mac addresses including your spokes
+exit 1
+{% endif %}

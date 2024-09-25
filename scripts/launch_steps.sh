@@ -12,7 +12,7 @@ echo -e "${blue}************ RUNNING .proxy.sh ************${clear}"
 source /etc/profile.d/proxy.sh
 {% endif %}
 
-{% if virtual_ctlplanes or virtual_workers %}
+{% if virtual_hub %}
 echo -e "${blue}************ RUNNING 00_virtual.sh ************${clear}"
 /root/scripts/00_virtual.sh || exit 1
 {% endif %}
@@ -62,10 +62,10 @@ echo -e "${blue}************ RUNNING 06_ntp.sh ************${clear}"
 /root/scripts/06_ntp.sh
 {% endif %}
 
-{% if deploy_openshift %}
-echo -e "${blue}************ RUNNING 07_deploy_openshift.sh ************${clear}"
+{% if deploy_hub %}
+echo -e "${blue}************ RUNNING 07_deploy_hub.sh ************${clear}"
 export KUBECONFIG=/root/ocp/auth/kubeconfig
-/root/scripts/07_deploy_openshift.sh
+/root/scripts/07_deploy_hub.sh
 
 {% if nfs %}
 echo -e "${blue}************ RUNNING 08_nfs.sh ************${clear}"

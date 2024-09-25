@@ -1,8 +1,8 @@
-{% if ztp_acm and 'advanced-cluster-management' not in disconnected_operators %}
+{% if acm and 'advanced-cluster-management' not in disconnected_operators %}
 {{ disconnected_operators.append("advanced-cluster-management") or "" }}
 {% endif %}
 
-{% if ztp_acm and 'multicluster-engine' not in disconnected_operators %}
+{% if acm and 'multicluster-engine' not in disconnected_operators %}
 {{ disconnected_operators.append("multicluster-engine") or "" }}
 {% endif %}
 
@@ -14,24 +14,20 @@
 {{ disconnected_operators.append("topology-aware-lifecycle-manager") or "" }}
 {% endif %}
 
-{% if ztp_spokes|length > 0 and 'sriov-network-operator' not in disconnected_operators %}
+{% if spokes|length > 0 and 'sriov-network-operator' not in disconnected_operators %}
 {{ disconnected_operators.append("sriov-network-operator") or "" }}
 {% endif %}
 
-{% if ztp_spokes|length > 0 and 'lvms-operator' not in disconnected_operators %}
+{% if spokes|length > 0 and 'lvms-operator' not in disconnected_operators %}
 {{ disconnected_operators.append("lvms-operator") or "" }}
 {% endif %}
 
 {% set snoplus_spokes = [] %}
 
-{% if not virtual_workers %}
-{% set virtual_workers_number = 0 %}
-{% endif %}
-
-{% for spoke in ztp_spokes %}
+{% for spoke in spokes %}
 {% set spoke_name = spoke.name %}
-{% set spoke_ctlplanes_number = spoke.get('ctlplanes_number', 1) %}
-{% set spoke_workers_number = spoke.get('workers_number', 0) %}
+{% set spoke_ctlplanes_number = spoke.get('ctlplanes', 1) %}
+{% set spoke_workers_number = spoke.get('workers', 0) %}
 {% set spoke_snoplus = True if spoke_ctlplanes_number == 1 and spoke_workers_number == 1 else False %}
 {% if spoke_snoplus %}
 {% do snoplus_spokes.append(spoke_name) %}
@@ -54,7 +50,7 @@
  memory: {{ installer_memory or memory }}
  privatekey: true
  notify: {{ notify }}
-{% if deploy_openshift %}
+{% if deploy_hub %}
  notifyscript: {{ notifyscript }}
 {% elif launch_steps %}
  notifycmd: oc get clusterversion
@@ -69,8 +65,8 @@
 {% if installer_ip != None %}
    ip: {{ installer_ip }}
    mask: {{ baremetal_cidr.split('/')[1] }}
-   gateway: {{ static_baremetal_gateway or baremetal_cidr|network_ip(1 if lab else -2) }}
-   dns: {{ static_baremetal_dns or static_baremetal_gateway or baremetal_cidr|network_ip(1 if lab else -2) }}
+   gateway: {{ static_baremetal_gateway or baremetal_cidr|network_ip(1 if create_network else -2) }}
+   dns: {{ static_baremetal_dns or static_baremetal_gateway or baremetal_cidr|network_ip(1 if create_network else -2) }}
 {% endif %}
    ipv6: {{ true if baremetal_cidr != None and ':' in baremetal_cidr else false }}
 {% if baremetal_cidr != None and ':' in baremetal_cidr and (not dualstack or dualstack and dualstack_isolated) %}
@@ -156,8 +152,8 @@
      {{ spoke }}
 {% endfor %}
 {% endif %}
-{% if ztp_policies_dir|exists %}
- - origin: {{ ztp_policies_dir }}
+{% if spoke_policies_dir|exists %}
+ - origin: {{ spoke_policies_dir }}
    path: /root/ztp/scripts/site-policies
    render: false
 {% endif %}

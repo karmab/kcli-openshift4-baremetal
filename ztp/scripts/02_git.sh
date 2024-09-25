@@ -8,8 +8,8 @@ IP=$(ip -o addr show $PRIMARY_NIC | head -1 | awk '{print $4}' | cut -d'/' -f1)
 GIT_SERVER=$(echo $IP | sed 's/\./-/g' | sed 's/:/-/g').sslip.io
 {% endif %}
 export GIT_SERVER
-GIT_USER={{ ztp_gitops_user }}
-GIT_PASSWORD={{ ztp_gitops_password }}
+GIT_USER={{ gitops_user }}
+GIT_PASSWORD={{ gitops_password }}
 
 mkdir -p /opt/gitea
 chown -R 1000:1000 /opt/gitea

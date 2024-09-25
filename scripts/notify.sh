@@ -10,7 +10,7 @@ oc get clusterversion
 echo "Nodes info:"
 oc get nodes
 echo -e "\nSpokes:\n"
-{% for spoke in ztp_spokes %}
+{% for spoke in spokes %}
 export SPOKE={{ spoke.name }}
 echo "Spoke $SPOKE"
 echo "Agents:"
