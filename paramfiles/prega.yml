@@ -1,6 +1,7 @@
 version: dev-preview
 tag: 4.18.0-ec.1
-disconnected_prega_operators:
+prega: true
+disconnected_operators:
 - name: cluster-logging
   channels:
   - name: stable-6.0

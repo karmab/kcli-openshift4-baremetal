@@ -1,6 +1,3 @@
-{% if disconnected_prega_operators|length > 0 %}
-{% set disconnected_operators = [] %}
-{% endif %}
 apiVersion: mirror.openshift.io/v1alpha2
 kind: ImageSetConfiguration
 storageConfig:
@@ -13,18 +10,15 @@ mirror:
   #    minVersion: 4.10.24
   #    maxVersion: 4.10.24
   #  graph: true
-  operators: # Operators we want to mirror
+  operators:
 {% if disconnected_operators %}
-{% if disconnected_operators_version %}
-  - catalog: registry.redhat.io/redhat/redhat-operator-index:{{ disconnected_operators_version }}
-{% else %}
-  - catalog: registry.redhat.io/redhat/redhat-operator-index:v${OCP_RELEASE}
-{% endif %}
+{% set catalog = 'quay.io/prega/prega-operator-index' if prega else 'registry.redhat.io/redhat/redhat-operator-index' %}
+  - catalog: {{ catalog }}:{{ disconnected_operators_version or 'v${OCP_RELEASE}' }}
     packages:
 {% for package in disconnected_operators %}
-{% if package.name is defined %}{# Comment: Support new syntax allowing to further filtering #}
+{% if package.name is defined %}
     - name: {{ package.name }}
-{% else %}{# Comment: Support old syntax #}
+{% else %}
     - name: {{ package }}
 {% endif %}
 {% if package.channels is defined and package.channels|length > 0 %}
@@ -103,29 +97,6 @@ mirror:
 {% endif %}
     packages:
 {% for package in disconnected_marketplace_operators %}
-{% if package.name is defined %}
-    - name: {{ package.name }}
-{% else %}
-    - name: {{ package }}
-{% endif %}
-{% if package.channels is defined and package.channels|length > 0 %}
-      channels:
-{% for channel in package.channels %}
-      - name: {{ channel.name }}
-{% if channel.minVersion is defined %}
-        minVersion: {{ channel.minVersion }}
-{% endif %}
-{% if channel.maxVersion is defined %}
-        maxVersion: {{ channel.maxVersion }}
-{% endif %}
-{% endfor %}
-{% endif %}
-{% endfor %}
-{% endif %}
-{% if disconnected_prega_operators %}
-  - catalog: quay.io/prega/prega-operator-index:v${OCP_RELEASE}
-    packages:
-{% for package in disconnected_prega_operators %}
 {% if package.name is defined %}
     - name: {{ package.name }}
 {% else %}

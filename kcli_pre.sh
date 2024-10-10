@@ -222,3 +222,10 @@ exit 1
 echo You need to populate baremetal_macs with the complete list of mac addresses including your spokes or put that info in baremetal_nodes arrays
 exit 1
 {% endif %}
+
+{% if prega %}
+if [ "$(grep quay.io/prega {{ pull_secret }})" == "" ] ; then 
+echo prega requires a valid pull secret entry
+exit 1
+fi
+{% endif %}
